@@ -2,6 +2,7 @@ const User = require('../models/User')
 const bcrypt = require('bcrypt')
 const jwt = require('jsonwebtoken');
 const { error, success } = require('../Utils/responseWrapper');
+const { sendMail } = require('../middleWare/nodeMailer');
 
 
 const signUpController = async (req, res) =>{
@@ -86,6 +87,80 @@ const generateAccessToken = (data) =>{
         console.log(error);
     }
 }
+
+
+const generateOTP = () => {  
+    return Math.floor(100000 + Math.random() * 900000).toString();   
+};  
+
+
+const forgotPassword = async (req, res) => {
+    const { email } = req.body;
+    try {
+        const user = await User.findOne({ email });
+        if (!user) {
+            return res.status(404).json({ error: 'User not found' });
+        }
+        const otp = generateOTP();
+        user.resetPasswordOTP = otp;
+        user.resetPasswordExpires = Date.now() + 3600000; 
+        await user.save();
+        await sendMail(user.email, 'Password Reset OTP', `Your OTP for password reset is ${otp}`);
+        return res.send(success(200, { message: 'OTP sent to your email' }))
+    } catch (err) {
+        console.log("err :",err)
+        res.status(500).json({ error: 'Internal server error' });
+    }
+};
+
+const verifyOTP = async (req, res) => {
+    const { email, otp } = req.body;
+    console.log('Received OTP verification request:', { email, otp });
+    if (!email || !otp) {
+        return res.send(error(400, {error: 'Email and OTP are required.' }))
+    }
+    try {
+        const user = await User.findOne({ email });
+        if (!user) {
+            console.error('User not found for email:', email);
+            return res.send(error(400, {  error: 'Invalid email or OTP.'  }))
+        }
+        console.log('User found:', user);
+        if (user.resetPasswordOTP !== otp) {
+            console.error('Invalid OTP for user:', email);
+            return res.send(error(400, {  error: 'Invalid OTP.'  }))
+        }
+        if (user.resetPasswordExpires < Date.now()) {
+            console.error('Expired OTP for user:', email);
+            return res.send(error(400, {  error: 'OTP expired.' }))
+        }
+        return res.send(success(200, { message: 'OTP verified successfully' }))
+    } catch (err) {
+        res.status(500).json({ error: 'Internal server error' });
+    }
+};
+
+const updatePassword = async (req, res) => {
+    const { email, otp, newPassword } = req.body;
+
+    try {
+        const user = await User.findOne({ email });
+        if (!user || user.resetPasswordOTP !== otp || user.resetPasswordExpires < Date.now()) {
+            return res.status(400).json({ error: 'Invalid or expired OTP' });
+        }
+
+        user.password = await bcrypt.hash(newPassword, 10);
+        user.resetPasswordOTP = undefined;
+        user.resetPasswordExpires = undefined;
+
+        await user.save();
+
+        res.json({ message: 'Password updated successfully' });
+    } catch (err) {
+        console.error('Error in updatePassword:', err);
+        res.status(500).json({ error: 'Internal server error' });
+    }
+};
 module.exports = {
-    signUpController,logInController,getAllUser
+    signUpController,logInController,getAllUser,forgotPassword,verifyOTP,updatePassword
 }

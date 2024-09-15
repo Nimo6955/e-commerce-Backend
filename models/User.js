@@ -102,7 +102,15 @@ const userSchema = new mongoose.Schema({
     orders: [{
         type: mongoose.Schema.Types.ObjectId,
         ref: 'orders'
-    }]
+    }],
+    otp: {
+        type: String,
+        default: ''
+    },
+    otpExpires: {
+        type: Date,
+        default: Date.now
+    }
 });
 
 const User = mongoose.model('user', userSchema);

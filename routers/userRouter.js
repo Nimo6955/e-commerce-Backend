@@ -8,6 +8,7 @@ router.put('/updateUser/:id', userController.updateUser)
 router.post('/addAddress/:id', userController.addAddress)
 router.put('/updateAddress/:id', userController.updateAddress)
 router.delete('/deleteAddress/:id', userController.deleteAddress)
+router.post('/changeRole/:id', userController.changeRole)
 
 
 

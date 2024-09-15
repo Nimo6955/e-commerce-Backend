@@ -108,6 +108,8 @@ const addAddress = async (req, res) => {
 
     return res.send(success(200, { user }));  
 };
+
+
 const updateAddress = async (req, res) => {  
     const userId = req.params.id; // The user's ID from the route parameter  
     // const addressId = req.body; // The address ID to be updated from the route parameter  
@@ -156,9 +158,8 @@ const updateAddress = async (req, res) => {
         await user.save();  
 
         return res.send({ message: 'Address updated successfully', user });  
-    } catch (error) {  
-        console.error(error);  
-        return res.status(500).send({ message: 'Server error', error: error.message });  
+    } catch (e) {  
+        return res.send(error(500, e.message))  
     }  
 };
 
@@ -187,11 +188,32 @@ const deleteAddress = async (req, res) => {
         await user.save();  
 
         return res.send({ message: 'Address deleted successfully', user });  
-    } catch (error) {  
-        console.error(error);  
-        return res.status(500).send({ message: 'Server error', error: error.message });  
+    } catch (e) {    
+        return res.send(error(500, e.message))
     }  
 };
+
+const changeRole = async (req, res) => {
+    try {
+        const user = await User.findById(req.params.id);
+        if (!user) {
+            console.error('User not found');
+            return res.send(success(404, {message: 'User not found'}))
+        }
+
+        if(user.role == 'admin'){
+            user.role = 'user'
+        }
+        else if(user.role == 'user'){
+            user.role = 'admin'
+        }
+        await user.save();
+        return res.send(success(200, {message: 'User role updated' , user}))
+    } catch (e) {
+        return res.send(error(500, e.message))
+    }
+};
+
 module.exports = {
-    getOneUser, updateUser, addAddress,updateAddress,deleteAddress
+    getOneUser, updateUser, addAddress,updateAddress,deleteAddress,changeRole
 }

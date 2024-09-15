@@ -9,7 +9,7 @@ const createProductController = async (req, res)=>{
     
     try {
 
-        const { productName , category, available, old_price, new_price } = req.body;
+        const { productName , category, available, old_price, new_price,description } = req.body;
         productImage = req.files
         if(!productName || !category){
             res.send(error(400, 'All feilds are are required'))
@@ -28,7 +28,8 @@ const createProductController = async (req, res)=>{
             category,
             new_price,
             old_price,
-            available
+            available,
+            description
         })
 
         return res.send(success(200, {product}))
@@ -52,7 +53,7 @@ const getAllProducts = async (req, res)=>{
 const updateProduct = async (req,res) =>{
     try {
 
-        const { productName, category, available,old_price,new_price } = req.body;
+        const { productName, category, available,old_price,new_price,description } = req.body;
 
         const id = req.params.id;
         const product = await Product.findById({_id: id})
@@ -68,9 +69,12 @@ const updateProduct = async (req,res) =>{
         }
         if(old_price){
             product.old_price = old_price
-        }
+        }   
         if(available){
             product.available = available
+        }
+        if(description){
+            product.description = description
         }
         await product.save()
         // console.log(product);
@@ -215,6 +219,89 @@ const addToKart = async (req,res) =>{
     }
 
 }
+const removeOneFromKart = async (req,res) =>{
+    try {
+        const id = req.params.id;
+        const {productId} = req.body
+        const user = await User.findOne({ _id: id });
+        const product = await Product.findById(productId);
+
+        if (!user) {
+            return res.status(404).send({ message: 'User not found' });
+        }
+
+        if (!product) {
+            return res.status(404).send({ message: 'Product not found' });
+        }
+        user.karts.pop(productId)
+        await user.save()
+        return res.send(success(200,  {user}))
+
+    } catch (e) {
+        return res.send(error(500, e.message))
+        
+    }
+
+}
+
+const removeFromKart = async (req, res) => {  
+    try {  
+        const id = req.params.id;  
+        const { productId } = req.body;  
+        const user = await User.findOne({ _id: id });  
+
+        if (!user) {  
+            return res.status(404).send({ message: 'User not found' });  
+        }  
+
+        // Check how many times the productId appears in the kart  
+        const initialKartSize = user.karts.length;  
+        user.karts = user.karts.filter(item => item.toString() !== productId);  
+
+        // If no products were removed, send a message  
+        if (user.karts.length === initialKartSize) {  
+            return res.status(404).send({ message: 'Product not found in kart' });  
+        }  
+
+        await user.save();  
+        return res.send(success(200, { user }));  
+
+    } catch (e) {  
+        return res.send(error(500, e.message));  
+    }  
+};
+
+const getKarts = async (req, res) => {  
+    try {  
+        const id = req.params.id;  
+        const user = await User.findOne({ _id: id });  
+
+        if (!user) {  
+            return res.status(404).send({ message: 'User not found' });  
+        }  
+
+        // Create a frequency map for the products in the user's karts  
+        const productCountMap = user.karts.reduce((acc, productId) => {  
+            acc[productId] = (acc[productId] || 0) + 1;  
+            return acc;  
+        }, {});  
+
+        // Fetch all unique products that are in the user's karts  
+        const productIds = Object.keys(productCountMap);  
+        const products = await Product.find({ _id: { $in: productIds } });  
+
+        // Map products to include their counts  
+        const productsWithCount = products.map(product => ({  
+            ...product.toObject(),  
+            quantity: productCountMap[product._id.toString()] // Add count to each product  
+        }));  
+
+        return res.send(success(200, { products: productsWithCount }));  
+
+    } catch (e) {  
+        return res.send(error(500, e.message));  
+    }  
+};
 
 module.exports = {
     createProductController,
@@ -222,8 +309,11 @@ module.exports = {
     updateProduct,
     deleteProduct,
     addToKart,
+    removeOneFromKart,
+    removeFromKart,
     updateImage1,
     updateImage2,
     updateImage3,
-    updateImage4
+    updateImage4,
+    getKarts
   }

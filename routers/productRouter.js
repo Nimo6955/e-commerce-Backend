@@ -11,6 +11,9 @@ router.put('/updateImage4/:id', upload.single('productImage',1), productControll
 router.put('/updateProduct/:id', productController.updateProduct)
 router.delete('/deleteProduct', productController.deleteProduct)
 router.post('/addToKart/:id', productController.addToKart)
+router.post('/removeFromKart/:id', productController.removeFromKart)
+router.post('/removeOneFromKart/:id', productController.removeOneFromKart)
+router.post('/getKarts/:id', productController.getKarts)
 // router.post('/login', authController.logInController)
 
 module.exports = router

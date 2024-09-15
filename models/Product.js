@@ -26,6 +26,10 @@ const createProduct = new mongoose.Schema({
     available:{
         type: Boolean,
         default: true,
+    },
+    description:{
+        type: String,
+        required: true,
     }
 })
 
