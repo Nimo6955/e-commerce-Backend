@@ -6,10 +6,10 @@ const authRouters = require('./routers/authRouter')
 const productRouters = require('./routers/productRouter')
 const userRouter = require('./routers/userRouter')
 const orderRouter = require('./routers/orderRouter'); 
-
-
+const dotenv = require('dotenv')
 const app = express();
 
+dotenv.config()
 app.use(express.json())
 app.use(cors({
     origin: ['http://localhost:5173'],
@@ -18,7 +18,7 @@ app.use(cors({
 }))
 app.use(morgan('common'))
 app.use('/static', express.static(__dirname + '/Public/Images'))
-mongoose.connect('mongodb://127.0.0.1:27017/e-commerse')
+mongoose.connect(process.env.Mongo_Url)
 
 
 app.use('/auth', authRouters)
