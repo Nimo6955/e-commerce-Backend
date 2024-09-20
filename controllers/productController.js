@@ -1,7 +1,7 @@
 const User = require('../models/User')
 const Product = require('../models/Product')
 const { error, success } = require('../Utils/responseWrapper');
-const IMG_BASE_URL = 'http://localhost:5000/static/'
+const IMG_BASE_URL = `${process.env.Server_App}/static/`
 
 
 

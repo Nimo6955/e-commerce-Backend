@@ -77,7 +77,7 @@ const getAllUser = async (req,res) =>{
 }
 const generateAccessToken = (data) =>{
     try {
-        const token = jwt.sign(data, "my-secret-key", {
+        const token = jwt.sign(data, process.env.JWT_Key, {
             expiresIn: "1d",
         })
         console.log(token);
