@@ -1,43 +1,57 @@
 const User = require('../models/User')
 const Product = require('../models/Product')
 const { error, success } = require('../Utils/responseWrapper');
+const cloudinary = require('cloudinary').v2;  
 const IMG_BASE_URL = `${process.env.Server_App}/static/`
 
+const createProductController = async (req, res) => {  
+    try {  
+        const {  
+            productName,  
+            category,  
+            available,  
+            old_price,  
+            new_price,  
+            description  
+        } = req.body;  
 
+        const productImages = req.files; 
+        
 
-const createProductController = async (req, res)=>{
-    
-    try {
-
-        const { productName , category, available, old_price, new_price,description } = req.body;
-        productImage = req.files
-        if(!productName || !category){
-            res.send(error(400, 'All feilds are are required'))
+        if (!productName || !category) {  
+            return res.status(400).send(error(400, 'All fields are required'));  
         }  
-        if(!productImage){            
-            res.send(error(400, 'image not found'))
-        }
-        // if (!req.file) {
-     
-        //    return res.send(error(400, 'Image upload failed'))
-        //   }
-          const imageUrls = req.files.map(file => IMG_BASE_URL + file.filename);
-        const product = await Product.create({
-            productImage :  imageUrls,
-            productName,
-            category,
-            new_price,
-            old_price,
-            available,
-            description
-        })
 
-        return res.send(success(200, {product}))
-    } catch (e) {
-         return res.send(error(500, e.message))
-    }
+        if (!productImages || productImages.length === 0) {  
+            return res.status(400).send(error(400, 'Images not found'));  
+        }  
 
-}
+        // Upload each image to Cloudinary and collect their URLs  
+        const imageUploadPromises = productImages.map(file => {  
+            return cloudinary.uploader.upload(file.path ,{
+                folder: "e-commerce"
+            }) // Use file.path for local upload  
+                .then(result => result.secure_url); // Get the secure URL  
+        });  
+
+        const imageUrls = await Promise.all(imageUploadPromises);  
+
+        const product = await Product.create({  
+            productImage: imageUrls,  
+            productName,  
+            category,  
+            new_price,  
+            old_price,  
+            available,  
+            description  
+        });  
+
+        return res.status(200).send(success(200, { product }));  
+    } catch (e) {  
+        console.log(e)
+        return res.status(500).send(error(500, e.message));  
+    }  
+};
 
 const getAllProducts = async (req, res)=>{
 
@@ -87,12 +101,16 @@ const updateProduct = async (req,res) =>{
 const updateImage1 = async (req, res) => {  
     try {  
         const id = req.params.id;  
-        const image = IMG_BASE_URL + req.file.filename;  
+        const image = req.file;  
         
         let product = await Product.findById(id);  
-        
-        // Update the second element in the productImage array  
-        product.productImage[0] = image;  
+          
+        const result = await cloudinary.uploader.upload(image.path,{
+            folder: 'e-commerce'
+        }); 
+        const newImageUrl = result.secure_url; 
+
+        product.productImage[0] = newImageUrl;  
         
         const updatedProduct = await Product.findOneAndUpdate(  
             { _id: id },  
@@ -111,12 +129,16 @@ const updateImage1 = async (req, res) => {
 const updateImage2 = async (req, res) => {  
     try {  
         const id = req.params.id;  
-        const image = IMG_BASE_URL + req.file.filename;  
+        const image = req.file;  
         
         let product = await Product.findById(id);  
-        
-        // Update the second element in the productImage array  
-        product.productImage[1] = image;  
+          
+        const result = await cloudinary.uploader.upload(image.path,{
+            folder: 'e-commerce'
+        }); 
+        const newImageUrl = result.secure_url; 
+
+        product.productImage[1] = newImageUrl; 
         
         const updatedProduct = await Product.findOneAndUpdate(  
             { _id: id },  
@@ -135,12 +157,16 @@ const updateImage2 = async (req, res) => {
 const updateImage3 = async (req, res) => {  
     try {  
         const id = req.params.id;  
-        const image = IMG_BASE_URL + req.file.filename;  
+        const image = req.file;  
         
         let product = await Product.findById(id);  
-        
-        // Update the second element in the productImage array  
-        product.productImage[2] = image;  
+          
+        const result = await cloudinary.uploader.upload(image.path,{
+            folder: 'e-commerce'
+        }); 
+        const newImageUrl = result.secure_url; 
+
+        product.productImage[2] = newImageUrl; 
         
         const updatedProduct = await Product.findOneAndUpdate(  
             { _id: id },  
@@ -159,12 +185,16 @@ const updateImage3 = async (req, res) => {
 const updateImage4 = async (req, res) => {  
     try {  
         const id = req.params.id;  
-        const image = IMG_BASE_URL + req.file.filename;  
+        const image = req.file;  
         
         let product = await Product.findById(id);  
-        
-        // Update the second element in the productImage array  
-        product.productImage[3] = image;  
+          
+        const result = await cloudinary.uploader.upload(image.path,{
+            folder: 'e-commerce'
+        }); 
+        const newImageUrl = result.secure_url; 
+
+        product.productImage[3] = newImageUrl; 
         
         const updatedProduct = await Product.findOneAndUpdate(  
             { _id: id },  
