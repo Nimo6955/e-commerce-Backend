@@ -12,7 +12,7 @@ const createProductController = async (req, res) => {
             available,  
             old_price,  
             new_price,  
-            description  
+            description,
         } = req.body;  
 
         const productImages = req.files; 
@@ -27,7 +27,7 @@ const createProductController = async (req, res) => {
         }  
 
         // Upload each image to Cloudinary and collect their URLs  
-        const imageUploadPromises = productImages.map(file => {  
+        const imageUploadPromises =  productImages.map(file => {  
             return cloudinary.uploader.upload(file.path ,{
                 folder: "e-commerce"
             }) // Use file.path for local upload  
